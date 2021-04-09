@@ -30,6 +30,7 @@ module Colors
     return picked
   end
 
+  
 end
 
 module Intro
@@ -85,7 +86,6 @@ module Intro
     puts "The computer will give you feedback with 2 flags: "
     puts "White flag".colorize(:background => :light_white, :color => :black) + ": the color is correct, but it is on the wrong spot. "
     puts "Red flag".colorize(:background => :light_red, :color => :black) + ": the color is correct and it is on the right spot. "
-    puts "You only got 3 flags, that means the fourth color is incorrect."
     puts "For example you get " + "R".colorize(:background => :light_red, :color => :black) + " " + 
     "W".colorize(:background => :light_white, :color => :black) + " " + 
     "W".colorize(:background => :light_white, :color => :black)
@@ -123,7 +123,6 @@ class Guess
         end
       }
     }
-    # binding.pry
 
     code.each_with_index {|code_color, color_idx|
       if skip_code_array.any? {|item| item == color_idx}
@@ -149,22 +148,20 @@ class Guess
   end
 
 
+
 end
 
 module GameMethods
   def self.start_game
-    @game_over = false
     Intro.welcome
     player = Intro.get_player
     role = Intro.get_role
-    # @code = Colors.pick_random
+    @code = Colors.pick_random
     Intro.show_instructions
+    return @code
   end
   
   def self.get_guess
-    #for testing------
-    @code = ["r","g","b","b"]
-    #for testing------
     puts "\nYour guess is:"
     @guess = Guess.new
     until @guess.value.match(/^[rgbymo]{4}$/)
@@ -174,6 +171,46 @@ module GameMethods
     return @guess
   end
 
+  def self.show_guess
+    message = ""
+    arr = @guess.value.split('')
+    arr.each { |color|
+      if color == "r"
+        message << "R".colorize(:background => :light_red, :color =>:black) + "  "
+      elsif color == "g"
+        message << "G".colorize(:background => :light_green, :color =>:black) + "  "
+      elsif color == "b"
+        message << "B".colorize(:background => :light_blue, :color =>:black) + "  "
+      elsif color == "y"
+        message << "Y".colorize(:background => :light_yellow, :color =>:black) + "  "
+      elsif color == "m"
+        message << "M".colorize(:background => :light_magenta, :color =>:black) + "  "
+      elsif color == "o"
+        message << "O".colorize(:background => :yellow, :color =>:black) + "  "
+      end
+    }
+    return message
+  end
+
+  def self.show_code(code)
+    message = ""
+    code.each { |color|
+      if color == "r"
+        message << "R".colorize(:background => :light_red, :color =>:black) + "  "
+      elsif color == "g"
+        message << "G".colorize(:background => :light_green, :color =>:black) + "  "
+      elsif color == "b"
+        message << "B".colorize(:background => :light_blue, :color =>:black) + "  "
+      elsif color == "y"
+        message << "Y".colorize(:background => :light_yellow, :color =>:black) + "  "
+      elsif color == "m"
+        message << "M".colorize(:background => :light_magenta, :color =>:black) + "  "
+      elsif color == "o"
+        message << "O".colorize(:background => :yellow, :color =>:black) + "  "
+      end
+    }
+    return message
+  end
   
   def self.evaluate_guess
     flags = @guess.check_guess(@code,@guess.value)
@@ -181,10 +218,12 @@ module GameMethods
 
   end
   
-  def self.show_result(flags)
+  def self.show_feedback(flags)
     red = 0
     white = 0
-    puts
+    if flags.length < 1
+      puts "None if the colors are in the code!"
+    end
     flags.each { |flag|
       if flag == "RED" 
         red += 1
@@ -195,7 +234,10 @@ module GameMethods
       end
     }
     puts
-    if red > 1
+    if red == 4
+      puts "ALL OF THE COLORS ARE CORRECT"
+      puts "THEY ARE IN THE RIGHT SPOTS !"
+    elsif red > 1
       puts "#{red} colors are correct and are on the right spot"
     elsif red == 1
       puts "#{red} color is correct and is on the right spot"
@@ -205,23 +247,45 @@ module GameMethods
     elsif white == 1
       puts "#{white} color is correct, but it is on the wrong spot"
     end
-
+    return red
   end
 
 end
 
-def GameMechanisms
+def gameMechanisms
   gameover = false
+  turn = 0
+  code = GameMethods.start_game()
   until gameover
-    #GameMethods.start_game()
     guess = GameMethods.get_guess()
     flags = GameMethods.evaluate_guess()
+    turn += 1
+    puts
+    puts "--------------------------------"
+    # if win show the code
+    if (flags.length == 4 && flags.all? { |flag| flag == "RED"}) || turn == 12
+      gameover = true
+      puts "T H E  C O D E: " + GameMethods.show_code(code)
+    else
+      puts "T H E  C O D E: ?  ?  ?  ? "
+    end
+    puts "YOUR GUESS:     " + GameMethods.show_guess
+    puts "--------------------------------"
+    if gameover && turn == 12
+      puts " R U N S  O U T  O F  T U R N S ".colorize(:color => :light_red)
+      puts "--------G A M E  O V E R--------".colorize(:color => :light_red)
+    elsif gameover
+      puts "C O N G R A T U L A T I O N S!".colorize(:color => :light_green)
+      puts "---------Y O U  W O N---------".colorize(:color => :light_green)
+    else
+      puts "F E E D B A C K  F L A G S:"
+      GameMethods.show_feedback(flags)
+    end  
 
-    puts "------------------------"
-    puts "T H E  C O D E: ? ? ? ? "
-    puts "------------------------"
-    GameMethods.show_result(flags)
+
   end
 end
 
-GameMechanisms()
+gameMechanisms()
+
+#kódot rosszul mutatja ha nyersz
