@@ -106,27 +106,49 @@ class Guess
 
   def check_guess(code,guess)
     flags = []
-    binding.pry
-    for i in 0..3 do
-      if guess[i] == code[i]
-        flags.push("red")
-      else
-        for j in 0..3
-          if j == i 
-            next
+    skip_guess_array = []
+    skip_code_array = []
+    skip_count = 0
+    guess = guess.split('')
+    code.each_with_index {|code_color, color_idx|
+      guess.each_with_index {|guessed_color, guessed_idx|
+        if skip_guess_array.any? {|item| item == guessed_idx} 
+          next
           end
-          if guess[i] == code[j]
-            flags.push("white")
-          end
+        if code_color == guessed_color && color_idx == guessed_idx 
+          flags.push("RED")
+          skip_guess_array.push(guessed_idx)
+          skip_code_array.push(color_idx)
+          skip_count += 1
         end
-        return flags
-      end
-    end
+      }
+    }
+    # binding.pry
+
+    code.each_with_index {|code_color, color_idx|
+      if skip_code_array.any? {|item| item == color_idx}
+        next
+      end 
+      guess.each_with_index {|guessed_color, guessed_idx|
+        if skip_guess_array.any? {|item| item == guessed_idx}
+          next
+        elsif code_color == guessed_color 
+          flags.push("WHITE")
+          skip_guess_array.push(guessed_idx)
+          skip_count += 1
+          next
+        end
+        
+      }
+    }
+    return flags
   end
 
   def value
     return @guess
   end
+
+
 end
 
 module GameMethods
@@ -145,8 +167,7 @@ module GameMethods
     #for testing------
     puts "\nYour guess is:"
     @guess = Guess.new
-    # binding.pry
-    until @guess.value.match(/[rgbymo]{4}/)
+    until @guess.value.match(/^[rgbymo]{4}$/)
       puts "\nGive valid colors like GBYY or RMBG!".colorize(:color => :light_red)
       @guess = Guess.new
     end
@@ -155,19 +176,52 @@ module GameMethods
 
   
   def self.evaluate_guess
-    if @guess.check_guess(@code,@guess.value)
-      puts "dam, you are good"
-    else
-      puts "nope"
-    end
+    flags = @guess.check_guess(@code,@guess.value)
+    return flags
+
   end
   
-  def show_result
+  def self.show_result(flags)
+    red = 0
+    white = 0
+    puts
+    flags.each { |flag|
+      if flag == "RED" 
+        red += 1
+        print "RED".colorize(:background => :light_red, :color => :black) + " "
+      else
+        white += 1
+        print "WHITE".colorize(:background => :light_white, :color => :black) + " "
+      end
+    }
+    puts
+    if red > 1
+      puts "#{red} colors are correct and are on the right spot"
+    elsif red == 1
+      puts "#{red} color is correct and is on the right spot"
+    end
+    if white > 1
+      puts "#{white} colors are correct, but they are on the wrong spot"
+    elsif white == 1
+      puts "#{white} color is correct, but it is on the wrong spot"
+    end
 
+  end
+
+end
+
+def GameMechanisms
+  gameover = false
+  until gameover
+    #GameMethods.start_game()
+    guess = GameMethods.get_guess()
+    flags = GameMethods.evaluate_guess()
+
+    puts "------------------------"
+    puts "T H E  C O D E: ? ? ? ? "
+    puts "------------------------"
+    GameMethods.show_result(flags)
   end
 end
 
-#GameMethods.start_game()
-GameMethods.get_guess()
-GameMethods.evaluate_guess()
-
+GameMechanisms()
