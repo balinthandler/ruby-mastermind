@@ -62,7 +62,7 @@ module Intro
     end
   end
 
-  def self.show_instructions
+  def self.show_breaker_instructions
     puts "\n--Creating code--"
     sleep 0.5
     print "    "
@@ -84,24 +84,46 @@ module Intro
     puts "Enter a pattern similar to this: RRBY. "
     puts "Which means your guess is Red Red Blue Yellow. "
     puts "The computer will give you feedback with 2 flags: "
-    puts "White flag".colorize(:background => :light_white, :color => :black) + ": the color is correct, but it is on the wrong spot. "
-    puts "Red flag".colorize(:background => :light_red, :color => :black) + ": the color is correct and it is on the right spot. "
-    puts "For example you get " + "R".colorize(:background => :light_red, :color => :black) + " " + 
-    "W".colorize(:background => :light_white, :color => :black) + " " + 
-    "W".colorize(:background => :light_white, :color => :black)
+    puts " WHITE ".colorize(:background => :light_white, :color => :black) + ": the color is correct, but it is on the wrong spot. "
+    puts " RED ".colorize(:background => :light_red, :color => :black) + ": the color is correct and it is on the right spot. "
+    puts "For example you get " + " RED ".colorize(:background => :light_red, :color => :black) + " " + 
+    " WHITE ".colorize(:background => :light_white, :color => :black) + " " + 
+    " WHITE ".colorize(:background => :light_white, :color => :black)
     puts "Which means: 1 color is correct and is on the right spot, "
-    puts "and 2 other color also correct, but they are on the wrong spots."
+    puts "and 2 other colors are also correct, but they are on the wrong spots."
     puts "Beware! Feedback flags do not indicate positions! So on the example above "
     puts "you don't know which of your color has got red or white or no flag."
     puts "You have 12 turns to guess and to win! "
     puts "Let's start!"
+  end
 
+  def self.show_maker_instructions
+    puts "\nYou have 4 empty slots, enter a secret code of colors!"
+    puts "Available colors are: "     + " Red ".colorize(:background => :light_red) + " " +
+    " Green ".colorize(:background => :light_green) + " " +
+    " Blue ".colorize(:background => :blue) + " " +
+    " Yellow ".colorize(:background => :light_yellow) + " " +
+    " Magenta ".colorize(:background => :light_magenta) + " " +
+    " Orange ".colorize(:background => :yellow)
+    puts "One color could take multiple slots."
+    puts "Type only the initials, e.g. R for red, G for green etc.."
+    puts "Enter a pattern similar to this: RRBY."
+    puts "The computer tries to guess the correct combination."
+    puts "After each guess, you have to give feedback with 2 flags"
+    puts " WHITE ".colorize(:background => :light_white, :color => :black) + ": the color is correct, but it is on the wrong spot. "
+    puts " RED ".colorize(:background => :light_red, :color => :black) + ": the color is correct and it is on the right spot. "
+    puts "Feedback flags do not indicate positions!"
+    puts "Let's start!"
   end
 end
 
 class Guess
-  def initialize
-    @guess = gets.chomp.downcase
+  def initialize(role)
+    if role == "B"
+      @guess = gets.chomp.downcase
+    else
+      @guess = "rrrr"
+    end
   end
 
   def check_guess(code,guess)
@@ -155,20 +177,35 @@ module GameMethods
   def self.start_game
     Intro.welcome
     player = Intro.get_player
-    role = Intro.get_role
-    @code = Colors.pick_random
-    Intro.show_instructions
+    @role = Intro.get_role
+    if @role == 'M' 
+      # Intro.show_maker_instructions
+      # @code = gets.chomp.downcase
+      # until @code.match(/^[rgbymo]{4}$/)
+      #   puts "\nGive valid colors like GBYY or RMBG!".colorize(:color => :light_red)
+      #   @code = gets.chomp.downcase
+      # end
+    else
+      @code = Colors.pick_random
+      Intro.show_breaker_instructions
+    end
     return @code
   end
   
   def self.get_guess
-    puts "\nYour guess is:"
-    @guess = Guess.new
-    until @guess.value.match(/^[rgbymo]{4}$/)
-      puts "\nGive valid colors like GBYY or RMBG!".colorize(:color => :light_red)
-      @guess = Guess.new
+    if @role == "B"
+      puts "\nYour guess is:"
+      @guess = Guess.new(@role)
+      until @guess.value.match(/^[rgbymo]{4}$/)
+        puts "\nGive valid colors like GBYY or RMBG!".colorize(:color => :light_red)
+        @guess = Guess.new(@role)
+      end
+    else
+      @guess = Guess.new(@role)
+      puts "\nComputer's guess is:"
+      puts @guess.value
     end
-    return @guess
+      return @guess
   end
 
   def self.show_guess
@@ -227,10 +264,10 @@ module GameMethods
     flags.each { |flag|
       if flag == "RED" 
         red += 1
-        print "RED".colorize(:background => :light_red, :color => :black) + " "
+        print " RED ".colorize(:background => :light_red, :color => :black) + " "
       else
         white += 1
-        print "WHITE".colorize(:background => :light_white, :color => :black) + " "
+        print " WHITE ".colorize(:background => :light_white, :color => :black) + " "
       end
     }
     puts
@@ -249,17 +286,18 @@ module GameMethods
     end
     return red
   end
-
 end
 
 def gameMechanisms
   gameover = false
   turn = 0
+
+
   code = GameMethods.start_game()
   until gameover
     guess = GameMethods.get_guess()
     flags = GameMethods.evaluate_guess()
-    turn += 1
+
     puts
     puts "--------------------------------"
     # if win show the code
@@ -281,11 +319,10 @@ def gameMechanisms
       puts "F E E D B A C K  F L A G S:"
       GameMethods.show_feedback(flags)
     end  
-
+    turn += 1
 
   end
 end
 
 gameMechanisms()
 
-#kódot rosszul mutatja ha nyersz
